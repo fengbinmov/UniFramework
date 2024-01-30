@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace UniFramework.Singleton
@@ -9,18 +10,41 @@ namespace UniFramework.Singleton
     {
         private class Wrapper
         {
-            public int Priority { private set; get; }
-            public ISingleton Singleton { private set; get; }
+            private const string ONCREATE = "OnCreate";
+            private const string ONUPDATE = "OnUpdate";
+            private const string ONDESTROY = "OnDestroy";
+            private const BindingFlags bindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+            private readonly Type[] types1 = new Type[] { typeof(Action<object>) };
+            private readonly Type[] types2 = new Type[] {  };
 
-            public Wrapper(ISingleton module, int priority)
+            private Action<object> onCreate;
+            public Action OnUpdate { private set; get; }
+            private Action onDestroy;
+
+            public int Priority { private set; get; }
+            public object Singleton { private set; get; }
+
+            public Wrapper(object module,Type type, int priority)
             {
                 Singleton = module;
                 Priority = priority;
+                
+                MethodInfo method1 = type.GetMethod(ONCREATE, bindingFlags, Type.DefaultBinder, types1, null);
+                MethodInfo method2 = type.GetMethod(ONUPDATE, 0,bindingFlags, Type.DefaultBinder, types2, null);
+                MethodInfo method3 = type.GetMethod(ONDESTROY, 0,bindingFlags, Type.DefaultBinder, types2, null);
+
+                if (method1 != null) onCreate = (Action<object>)method1.CreateDelegate(types1[0], module);
+                if (method2 != null) OnUpdate = (Action)method2.CreateDelegate(typeof(Action), module);
+                if (method3 != null) onDestroy = (Action)method3.CreateDelegate(typeof(Action), module);
             }
+
+            public void OnCreate(object obj_) { if(onCreate != null) onCreate(obj_); }
+            public void OnDestroy() { if (onDestroy != null) onDestroy(); }
         }
 
         private static bool _isInitialize = false;
         private static GameObject _driver = null;
+        private static int onUpdateCount;
         private static readonly List<Wrapper> _wrappers = new List<Wrapper>(100);
         private static MonoBehaviour _behaviour;
         private static bool _isDirty = false;
@@ -37,7 +61,7 @@ namespace UniFramework.Singleton
             {
                 // 创建驱动器
                 _isInitialize = true;
-                _driver = new UnityEngine.GameObject($"[{nameof(UniSingleton)}]");
+                _driver = new GameObject($"[{nameof(UniSingleton)}]");
                 _behaviour = _driver.AddComponent<UniSingletonDriver>();
                 UnityEngine.Object.DontDestroyOnLoad(_driver);
                 UniLogger.Log($"{nameof(UniSingleton)} initalize !");
@@ -69,21 +93,26 @@ namespace UniFramework.Singleton
             if (_isDirty)
             {
                 _isDirty = false;
-                _wrappers.Sort((left, right) =>
+                int flag = 0;
+                for (int i = 0; i < onUpdateCount - 1; i++)
                 {
-                    if (left.Priority > right.Priority)
-                        return -1;
-                    else if (left.Priority == right.Priority)
-                        return 0;
-                    else
-                        return 1;
-                });
+                    for (int j = 0; j < onUpdateCount -1- i; j++)
+                    {
+                        if (_wrappers[i].Priority > _wrappers[j + 1].Priority) {
+                            var temp = _wrappers[i];
+                            _wrappers[i] = _wrappers[j + 1];
+                            _wrappers[j + 1] = temp;
+                            flag++;
+                        }
+                    }
+                    if (flag == 0) break;
+                }
             }
 
             // 轮询所有模块
-            for (int i = 0; i < _wrappers.Count; i++)
+            for (int i = 0; i < onUpdateCount; i++)
             {
-                _wrappers[i].Singleton.OnUpdate();
+                _wrappers[i].OnUpdate();
             }
         }
 
@@ -147,9 +176,20 @@ namespace UniFramework.Singleton
             }
 
             T module = Activator.CreateInstance<T>();
-            Wrapper wrapper = new Wrapper(module, priority);
-            wrapper.Singleton.OnCreate(createParam);
-            _wrappers.Add(wrapper);
+            Wrapper wrapper = new Wrapper(module,typeof(T), priority);
+
+            wrapper.OnCreate(createParam);
+
+            if (wrapper.OnUpdate != null)
+            {
+                _wrappers.Insert(0,wrapper);
+                onUpdateCount++;
+            }
+            else
+            {
+                _wrappers.Add(wrapper);
+            }
+
             _isDirty = true;
             return module;
         }
@@ -164,8 +204,12 @@ namespace UniFramework.Singleton
             {
                 if (_wrappers[i].Singleton.GetType() == type)
                 {
-                    _wrappers[i].Singleton.OnDestroy();
+                    _wrappers[i].OnDestroy();
+
+                    if (_wrappers[i].OnUpdate != null) onUpdateCount--;
+
                     _wrappers.RemoveAt(i);
+                    _isDirty = true;
                     return true;
                 }
             }
@@ -218,9 +262,10 @@ namespace UniFramework.Singleton
         {
             for (int i = 0; i < _wrappers.Count; i++)
             {
-                _wrappers[i].Singleton.OnDestroy();
+                _wrappers[i].OnDestroy();
             }
             _wrappers.Clear();
+            onUpdateCount = 0;
         }
     }
 }
