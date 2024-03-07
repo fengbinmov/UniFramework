@@ -204,6 +204,8 @@ namespace UniFramework.Log
         /// </summary>
         private void DisposeAll()
         {
+            if (driver != null) GameObject.Destroy(Instance.driver);
+
             Application.logMessageReceivedThreaded -= Application_logMessageReceivedThreaded;
 
             WriteLine($"{nameof(UniLog)} dispose !");
@@ -237,7 +239,6 @@ namespace UniFramework.Log
             DisposeOutlog();
             CreateOutlog();
         }
-
 
         /// <summary>
         /// 关闭跟踪日志信息
