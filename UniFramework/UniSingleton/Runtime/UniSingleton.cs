@@ -17,9 +17,9 @@ namespace UniFramework.Singleton
             private readonly Type[] types1 = new Type[] { typeof(Action<object>) };
             private readonly Type[] types2 = new Type[] {  };
 
-            private Action<object> onCreate;
+            public Action<object> onCreate { private set; get; }
             public Action OnUpdate { private set; get; }
-            private Action onDestroy;
+            public Action onDestroy { private set; get; }
 
             public int Priority { private set; get; }
             public object Singleton { private set; get; }
@@ -37,9 +37,6 @@ namespace UniFramework.Singleton
                 if (method2 != null) OnUpdate = (Action)method2.CreateDelegate(typeof(Action), module);
                 if (method3 != null) onDestroy = (Action)method3.CreateDelegate(typeof(Action), module);
             }
-
-            public void OnCreate(object obj_) { if(onCreate != null) onCreate(obj_); }
-            public void OnDestroy() { if (onDestroy != null) onDestroy(); }
         }
 
         private static bool _isInitialize = false;
@@ -178,7 +175,7 @@ namespace UniFramework.Singleton
             T module = Activator.CreateInstance<T>();
             Wrapper wrapper = new Wrapper(module,typeof(T), priority);
 
-            wrapper.OnCreate(createParam);
+            wrapper?.onCreate(createParam);
 
             if (wrapper.OnUpdate != null)
             {
@@ -204,7 +201,7 @@ namespace UniFramework.Singleton
             {
                 if (_wrappers[i].Singleton.GetType() == type)
                 {
-                    _wrappers[i].OnDestroy();
+                    _wrappers[i]?.onDestroy();
 
                     if (_wrappers[i].OnUpdate != null) onUpdateCount--;
 
@@ -262,7 +259,7 @@ namespace UniFramework.Singleton
         {
             for (int i = 0; i < _wrappers.Count; i++)
             {
-                _wrappers[i].OnDestroy();
+                _wrappers[i]?.onDestroy();
             }
             _wrappers.Clear();
             onUpdateCount = 0;
