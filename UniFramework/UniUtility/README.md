@@ -12,18 +12,21 @@
 ```
 private void OnDrawGizmos()
 {
-    Vector3 direct = transform.forward;
+    process = Mathf.Abs(Mathf.Sin(Time.realtimeSinceStartup));
+    transform.rotation = Quaternion.Euler(0, 360 * process, 0);
+    radius = 360f * process;
+    distance = 1.835f * process;
 
-    Gizmos.color = Color.Lerp(Color.red, Color.blue, process);
+    Gizmos.color = Color.Lerp(Color.white, Color.green, process);
 
     Gizmoss.DrawPoint(Vector3.zero);
     Gizmoss.DrawLable(new Vector3(0,0,-0.2f),"Gizmoss 演示");
 
     Gizmoss.DrawLine(new Vector3(1,0,0),new Vector3(1,0,1));
 
-    Gizmoss.DrawXLine(new Vector3(2, 0, 0), new Vector3(2, 0, 0) + direct.normalized, 0.1f);
+    Gizmoss.DrawXLine(new Vector3(2, 0, 0), new Vector3(2, 0, 0) + transform.forward, 0.1f);
 
-    Gizmoss.DrawArrow(new Vector3(3, 0, 0), new Vector3(3, 0, 0) + direct.normalized, 0.1f);
+    Gizmoss.DrawArrow(new Vector3(3, 0, 0), new Vector3(3, 0, 0) + transform.forward, 0.1f);
 
     Gizmoss.DrawCirce(new Vector3(4, 0, 0), 0.5f, transform.rotation);
     Gizmoss.DrawCirce(new Vector3(4, 0, 1.5f), 0.5f, transform.rotation,8);
@@ -44,9 +47,6 @@ private void OnDrawGizmos()
 
     Gizmoss.DrawCapsule(new Vector3(11, 0, 0), 0.5f, distance*2, transform.rotation);
 
-    Gizmoss.DrawSolidAngle(new Vector3(12, 0, 0), distance, radius, transform.rotation,32);
-
-    //radius = (radius + Time.deltaTime * 30) % 360;
-    //distance = (distance + Time.deltaTime) % distance;
+    Gizmoss.DrawSolidAngle(new Vector3(12, 0, 0), Mathf.Max(0.5f, distance), Mathf.Min(60f, radius), transform.rotation,32);
 }
 ```
