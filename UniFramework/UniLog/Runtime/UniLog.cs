@@ -205,7 +205,7 @@ namespace UniFramework.Log
         private void DisposeAll()
         {
             if (driver != null) GameObject.Destroy(Instance.driver);
-
+            
             Application.logMessageReceivedThreaded -= Application_logMessageReceivedThreaded;
 
             WriteLine($"{nameof(UniLog)} dispose !");
