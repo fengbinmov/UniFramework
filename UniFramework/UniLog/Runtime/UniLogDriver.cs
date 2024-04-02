@@ -9,6 +9,8 @@ namespace UniFramework.Log {
     {
         public static void Initalize() {
 
+            UniLog.Initalize();
+
             UniLog.Instance.IsManualFlush = true;
 
             if (UniLog.Instance.driver == null) 

@@ -43,7 +43,6 @@ namespace UniFramework.Log
                     {
                         if (_instance == null)
                         {
-
                             _instance = new UniLog();
                             _isInitialize = true;
                         }
