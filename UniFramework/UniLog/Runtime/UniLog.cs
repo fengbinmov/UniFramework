@@ -10,7 +10,7 @@ namespace UniFramework.Log
 {
     public class UniLog
     {
-        private const string TimeFormat = "HH:mm:ss";
+        private const string TimeFormat = "HH:mm:ss:ms";
         private const string TimeFormat2 = "yyyyMMddHHmmss";
         private const int BREAKDISKLENGTH = 10485760;           //日志文件分卷大小 10M
 #if UNITY_STANDALONE
