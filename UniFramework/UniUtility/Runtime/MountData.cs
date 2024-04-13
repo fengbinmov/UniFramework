@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
 namespace UniFramework.Utility
@@ -19,9 +19,9 @@ namespace UniFramework.Utility
         private ResGroup[] resGroups = new ResGroup[] { };
 
         /// <summary>
-        /// »ñÈ¡Ö¸¶¨µÄÖµ
-        /// - µ± group ²»Îª¿ÕÊ±½«»áÏÈÔÚ ResGroupÖĞ²éÑ¯Öµ£¬ÖµÎª¿ÕÔò½«»áÔÚ listData ÖĞ¼ÌĞø²éÑ¯
-        /// - µ± group Îª¿Õ½«Ö»»áÔÚ listData ÖĞ²éÑ¯Öµ
+        /// è·å–æŒ‡å®šçš„å€¼
+        /// - å½“ group ä¸ä¸ºç©ºæ—¶å°†ä¼šå…ˆåœ¨ ResGroupä¸­æŸ¥è¯¢å€¼ï¼Œå€¼ä¸ºç©ºåˆ™å°†ä¼šåœ¨ listData ä¸­ç»§ç»­æŸ¥è¯¢
+        /// - å½“ group ä¸ºç©ºå°†åªä¼šåœ¨ listData ä¸­æŸ¥è¯¢å€¼
         /// </summary>
         public Object this[string key, string group = null]
         {
@@ -45,10 +45,10 @@ namespace UniFramework.Utility
         }
 
         /// <summary>
-        /// ÊÇ·ñ´æÔÚ¸Ã¼üËù¶ÔÓ¦µÄÖµ
+        /// æ˜¯å¦å­˜åœ¨è¯¥é”®æ‰€å¯¹åº”çš„å€¼
         /// </summary>
-        /// <param name="key">¼üÖµ</param>
-        /// <param name="group">¼üÖµËùÔÚµÄ×é</param>
+        /// <param name="key">é”®å€¼</param>
+        /// <param name="group">é”®å€¼æ‰€åœ¨çš„ç»„</param>
         public bool ContainsKey(string key, string group = null)
         {
             if (string.IsNullOrEmpty(key)) return false;
@@ -70,11 +70,11 @@ namespace UniFramework.Utility
         }
 
         /// <summary>
-        /// ³¢ÊÔ»ñÈ¡Ö¸¶¨¼ü¶ÔÓ¦µÄÊı¾İ
+        /// å°è¯•è·å–æŒ‡å®šé”®å¯¹åº”çš„æ•°æ®
         /// </summary>
-        /// <param name="key">¼üÖµ</param>
-        /// <param name="obj">·µ»ØµÄ¶ÔÓ¦Êı¾İ</param>
-        /// <param name="group">¼üÖµËùÔÚµÄ×é</param>
+        /// <param name="key">é”®å€¼</param>
+        /// <param name="obj">è¿”å›çš„å¯¹åº”æ•°æ®</param>
+        /// <param name="group">é”®å€¼æ‰€åœ¨çš„ç»„</param>
         public bool TryGetValue(string key, out UnityEngine.Object obj, string group = null)
         {
             obj = default;
@@ -106,7 +106,7 @@ namespace UniFramework.Utility
         }
 
         /// <summary>
-        /// ·µ»ØËùÓĞµÄÖµÊı¾İ
+        /// è¿”å›æ‰€æœ‰çš„å€¼æ•°æ®
         /// </summary>
         public Object[] Values
         {
