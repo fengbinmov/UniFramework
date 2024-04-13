@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace UniFramework.Localization
 {
-    internal class TableCollection
+    public class TableCollection
     {
         /// <summary>
         /// 数据表集合
@@ -20,10 +20,6 @@ namespace UniFramework.Localization
         public TableCollection(string tableName)
         {
             TableName = tableName;
-        }
-
-        public TableCollection(string name) { 
-            TableName = name;
         }
 
         /// <summary>

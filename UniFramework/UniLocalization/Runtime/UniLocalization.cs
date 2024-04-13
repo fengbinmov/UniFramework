@@ -22,19 +22,13 @@ namespace UniFramework.Localization
         /// <summary>
         /// 初始化本地化系统
         /// </summary>
-        public static void Initalize(List<LocaleIdentifier> locales)
+        public static void Initalize()
         {
             if (_isInitialize)
                 throw new Exception($"{nameof(UniLocalization)} is initialized !");
 
             if (_isInitialize == false)
             {
-                if (locales.Count == 0)
-                    throw new Exception($"The param locales list cannot be empty!");
-
-                _locales.AddRange(locales);
-                _currentLocale = _locales[0];
-
                 // 创建驱动器
                 _isInitialize = true;
                 UniLogger.Log($"{nameof(UniLocalization)} initalize !");
@@ -99,6 +93,24 @@ namespace UniFramework.Localization
         }
 
         /// <summary>
+        /// 获取数据集合
+        /// </summary>
+        public static bool TryGetTableCollection(string tableName, out TableCollection value)
+        {
+            return _tableCollections.TryGetValue(tableName, out value);
+        }
+
+        /// <summary>
+        /// 添加本地标识符
+        /// </summary>
+        public static void AddLocaleIdentifier(LocaleIdentifier identifier)
+        {
+            _locales.Add(identifier);
+
+            if (_currentLocale == null) _currentLocale = _locales[0];
+        }
+
+        /// <summary>
         /// 获取翻译器的实例
         /// </summary>
         internal static ITranslation GetOrCreateTranslation(System.Type translationType)
@@ -126,7 +138,7 @@ namespace UniFramework.Localization
         /// <summary>
         /// 获取数据收集器
         /// </summary>
-        internal static TableCollection GetOrCreateCollection(string tableName)
+        public static TableCollection GetOrCreateCollection(string tableName)
         {
             if (_tableCollections.TryGetValue(tableName, out var collection))
             {
