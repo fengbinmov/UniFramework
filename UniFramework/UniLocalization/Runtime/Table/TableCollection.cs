@@ -14,6 +14,18 @@ namespace UniFramework.Localization
         /// </summary>
         public string TableName { protected set; get; }
 
+        public TableCollection(string name) { 
+            TableName = name;
+        }
+
+        /// <summary>
+        /// 获取表格数据
+        /// </summary>
+        public bool TryGetTableData(string cultureCode,out TableData value)
+        {
+            return _tables.TryGetValue(cultureCode,out value);
+        }
+
         /// <summary>
         /// 获取表格数据
         /// </summary>
@@ -32,7 +44,7 @@ namespace UniFramework.Localization
         /// </summary>
         public void AddTableData(string cultureCode, TableData tableData)
         {
-            if (_tables.ContainsKey(cultureCode) == false)
+            if (_tables.ContainsKey(cultureCode))
             {
                 UniLogger.Warning($"The data table already exists : {cultureCode}");
                 return;

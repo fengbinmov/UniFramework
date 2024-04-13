@@ -4,9 +4,9 @@ using UnityEngine.UI;
 
 namespace UniFramework.Localization
 {
-    [ExecuteInEditMode]
+    //[ExecuteInEditMode]
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(Text))]
+    [RequireComponent(typeof(Dropdown))]
     [LocalizedBehaviour(typeof(TranslationString))]
     public class LocalizedDropdown : LocalizedBehaviour
     {
@@ -33,6 +33,7 @@ namespace UniFramework.Localization
                     _options = new List<Option>();
                 return _options;
             }
+            set { _options = value; }
         }
 
         protected override void OnTranslation(ITranslation translation)
@@ -56,8 +57,12 @@ namespace UniFramework.Localization
                     optionData = optionDatas[i];
                 }
 
-                TranslationKey = option.StringTranslationKey;
-                optionData.text = (string)translation.GetTranslationResult(this);
+                optionData.text = (string)translation.GetTranslationResult(DataTableName, option.StringTranslationKey);
+            }
+            if (_options.Count > 0)
+            {
+                TranslationKey = _options[_dropdown.value].StringTranslationKey;
+                _dropdown.captionText.text = (string)translation.GetTranslationResult(DataTableName, TranslationKey);
             }
         }
     }

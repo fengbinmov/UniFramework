@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace UniFramework.Localization
 {
-    [ExecuteInEditMode]
+    //[ExecuteInEditMode]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Image))]
     [LocalizedBehaviour(typeof(TranslationSprite))]

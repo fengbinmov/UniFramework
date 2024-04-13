@@ -2,7 +2,7 @@
 
 namespace UniFramework.Localization
 {
-    [ExecuteInEditMode]
+    //[ExecuteInEditMode]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(AudioSource))]
     [LocalizedBehaviour(typeof(TranslationAudio))]

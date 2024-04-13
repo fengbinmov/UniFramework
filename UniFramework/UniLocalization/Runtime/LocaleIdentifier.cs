@@ -75,5 +75,59 @@ namespace UniFramework.Localization
                 default: return "";
             }
         }
+
+        public static SystemLanguage GetCultureCodeSystemLanguage(string CultureCode)
+        {
+            switch (CultureCode)
+            {
+                case "af": return SystemLanguage.Afrikaans;
+                case "ar":return SystemLanguage.Arabic;
+                case "eu":return SystemLanguage.Basque;
+                case "be":return SystemLanguage.Belarusian;
+                case "bg": return SystemLanguage.Bulgarian;
+                case "ca": return SystemLanguage.Catalan;
+                case "zh-CN": return SystemLanguage.Chinese;
+                case "zh-hans": return SystemLanguage.ChineseSimplified;
+                case "zh-hant": return SystemLanguage.ChineseTraditional;
+                case "hr": return SystemLanguage.SerboCroatian;
+                case "cs":return SystemLanguage.Czech;
+                case "da":return SystemLanguage.Danish;
+                case "nl":return SystemLanguage.Dutch;
+                case "en":return SystemLanguage.English;
+                case "et":return SystemLanguage.Estonian;
+                case "fo":return SystemLanguage.Faroese;
+                case "fi":return SystemLanguage.Finnish;
+                case "fr":return SystemLanguage.French;
+                case "de":return SystemLanguage.German;
+                case "el":return SystemLanguage.Greek;
+                case "he":return SystemLanguage.Hebrew;
+                case "hu":return SystemLanguage.Hungarian;
+                case "is":return SystemLanguage.Icelandic;
+                case "id":return SystemLanguage.Indonesian;
+                case "it":return SystemLanguage.Italian;
+                case "ja":return SystemLanguage.Japanese;
+                case "ko":return SystemLanguage.Korean;
+                case "lv":return SystemLanguage.Latvian;
+                case "lt":return SystemLanguage.Lithuanian;
+                case "no":return SystemLanguage.Norwegian;
+                case "pl":return SystemLanguage.Polish;
+                case "pt":return SystemLanguage.Portuguese;
+                case "ro":return SystemLanguage.Romanian;
+                case "ru":return SystemLanguage.Russian;
+                case "sk":return SystemLanguage.Slovak;
+                case "sl":return SystemLanguage.Slovenian;
+                case "es":return SystemLanguage.Spanish;
+                case "sv":return SystemLanguage.Swedish;
+                case "th":return SystemLanguage.Thai;
+                case "tr":return SystemLanguage.Turkish;
+                case "uk":return SystemLanguage.Ukrainian;
+                case "vi": return SystemLanguage.Vietnamese;
+#if UNITY_2022_2_OR_NEWER
+                case "hi": return SystemLanguage.Hindi;
+#endif
+                default: return SystemLanguage.Unknown;
+            }
+        }
+
     }
 }
