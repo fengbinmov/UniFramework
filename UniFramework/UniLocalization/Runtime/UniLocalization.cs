@@ -22,13 +22,19 @@ namespace UniFramework.Localization
         /// <summary>
         /// 初始化本地化系统
         /// </summary>
-        public static void Initalize()
+        public static void Initalize(List<LocaleIdentifier> locales)
         {
             if (_isInitialize)
                 throw new Exception($"{nameof(UniLocalization)} is initialized !");
 
             if (_isInitialize == false)
             {
+                if (locales.Count == 0)
+                    throw new Exception($"The param locales list cannot be empty!");
+
+                _locales.AddRange(locales);
+                _currentLocale = _locales[0];
+
                 // 创建驱动器
                 _isInitialize = true;
                 UniLogger.Log($"{nameof(UniLocalization)} initalize !");
@@ -42,7 +48,6 @@ namespace UniFramework.Localization
         {
             if (_isInitialize)
             {
-
             }
         }
 
@@ -53,7 +58,7 @@ namespace UniFramework.Localization
         {
             foreach (var locale in _locales)
             {
-                if (locale.Code == cultureCode)
+                if (locale.CultureCode == cultureCode)
                 {
                     _currentLocale = locale;
                     OnLocalizationChanged.Invoke();
@@ -73,10 +78,34 @@ namespace UniFramework.Localization
         }
 
         /// <summary>
+        /// 添加数据表
+        /// </summary>
+        public static void AddTableData(TableData tableData)
+        {
+            var collection = GetOrCreateCollection(tableData.TableName);
+            collection.AddTableData(tableData.CultureCode, tableData);
+        }
+
+        /// <summary>
+        /// 获取本地化数据
+        /// </summary>
+        public static object GetLocalizeValue(string tableName, string translationKey)
+        {
+            var tableCollection = GetOrCreateCollection(tableName);
+            var tableData = tableCollection.GetTableData(_currentLocale.CultureCode);
+            if (tableData == null)
+                return null;
+            return tableData.GetValue(translationKey);
+        }
+
+        /// <summary>
         /// 获取翻译器的实例
         /// </summary>
-        public static ITranslation GetOrCreateTranslation(System.Type translationType)
+        internal static ITranslation GetOrCreateTranslation(System.Type translationType)
         {
+            if (_isInitialize == false)
+                return null;
+
             if (translationType == null)
                 return null;
 
@@ -95,52 +124,20 @@ namespace UniFramework.Localization
         }
 
         /// <summary>
-        /// 添加本地标识符
+        /// 获取数据收集器
         /// </summary>
-        public static void AddLocaleIdentifier(LocaleIdentifier identifier)
+        internal static TableCollection GetOrCreateCollection(string tableName)
         {
-            _locales.Add(identifier);
-
-            if (_currentLocale == null) _currentLocale = _locales[0];
-        }
-
-        /// <summary>
-        /// 添加数据集合
-        /// </summary>
-        public static void AddTableCollection(TableCollection collection)
-        {
-            _tableCollections.Add(collection.TableName, collection);
-        }
-
-        /// <summary>
-        /// 获取数据集合
-        /// </summary>
-        public static bool TryGetTableCollection(string tableName,out TableCollection value)
-        {
-            return _tableCollections.TryGetValue(tableName, out value);
-        }
-
-        /// <summary>
-        /// 获取数据集合
-        /// </summary>
-        public static TableCollection GetTableCollection(string tableName)
-        {
-            if (_tableCollections.ContainsKey(tableName) == false)
+            if (_tableCollections.TryGetValue(tableName, out var collection))
             {
-                UniLogger.Error($"Not found table collection : {tableName}");
-                return null;
+                return collection;
             }
-
-            return _tableCollections[tableName];
-        }
-
-        /// <summary>
-        /// 获取数据
-        /// </summary>
-        public static object GetTableDataValue(string tableName, string translationKey)
-        {
-            var tableData = _tableCollections[tableName].GetTableData(_currentLocale.Code);
-            return tableData.GetValue(translationKey);
+            else
+            {
+                collection = new TableCollection(tableName);
+                _tableCollections.Add(tableName, collection);
+                return collection;
+            }
         }
     }
 }
