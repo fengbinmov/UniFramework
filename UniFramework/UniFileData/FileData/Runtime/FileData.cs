@@ -92,11 +92,11 @@ namespace UniFramework.FileData
             SaveToNative(SavePath);
         }
 
-        public virtual T LoadFromNative(string path)
+        protected virtual T LoadFromNative(string path)
         {
             return FileHelper.LoadFromBinary<T>(path);
         }
-        public virtual void SaveToNative(string path)
+        protected virtual void SaveToNative(string path)
         {
             FileHelper.ToBinary(_data, path);
         }
@@ -108,12 +108,12 @@ namespace UniFramework.FileData
     [Serializable]
     public class FileData<T> : FileBase<T>
     {
-        public override T LoadFromNative(string path) 
+        protected override T LoadFromNative(string path) 
         { 
             return FileHelper.LoadFromBinary<T>(path);
         }
 
-        public override void SaveToNative(string path)
+        protected override void SaveToNative(string path)
         {
             FileHelper.ToBinary(Data, path);
         }
@@ -125,13 +125,13 @@ namespace UniFramework.FileData
     [Serializable]
     public class FileJson<T> :FileBase<T>
     {
-        public override T LoadFromNative(string path)
+        protected override T LoadFromNative(string path)
         {
             var text = FileHelper.LoadFromText(path);
             return JsonUtility.FromJson<T>(text);
         }
 
-        public override void SaveToNative(string path)
+        protected override void SaveToNative(string path)
         {
             var text = JsonUtility.ToJson(Data);
             FileHelper.ToText(text, path);
