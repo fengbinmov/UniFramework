@@ -6,25 +6,32 @@ namespace UniFramework.Event
 {
     public class EventGroup
     {
-        private readonly Dictionary<System.Type, List<Action<IEventMessage>>> _cachedListener = new Dictionary<System.Type, List<Action<IEventMessage>>>();
+        private readonly Dictionary<int, List<Action<IEventMessage>>> _cachedListener = new Dictionary<int, List<Action<IEventMessage>>>();
 
         /// <summary>
         /// 添加一个监听
         /// </summary>
         public void AddListener<TEvent>(System.Action<IEventMessage> listener) where TEvent : IEventMessage
         {
-            System.Type eventType = typeof(TEvent);
-            if (_cachedListener.ContainsKey(eventType) == false)
-                _cachedListener.Add(eventType, new List<Action<IEventMessage>>());
+            AddListener(typeof(TEvent).GetHashCode(), listener);
+        }
 
-            if (_cachedListener[eventType].Contains(listener) == false)
+        /// <summary>
+        /// 添加一个监听
+        /// </summary>
+        public void AddListener(int eventId,System.Action<IEventMessage> listener)
+        {
+            if (_cachedListener.ContainsKey(eventId) == false)
+                _cachedListener.Add(eventId, new List<Action<IEventMessage>>());
+
+            if (_cachedListener[eventId].Contains(listener) == false)
             {
-                _cachedListener[eventType].Add(listener);
-                UniEvent.AddListener(eventType, listener);
+                _cachedListener[eventId].Add(listener);
+                UniEvent.AddListener(eventId, listener);
             }
             else
             {
-                UniLogger.Warning($"Event listener is exist : {eventType}");
+                UniLogger.Warning($"Event listener is exist : {eventId}");
             }
         }
 
@@ -35,10 +42,10 @@ namespace UniFramework.Event
         {
             foreach (var pair in _cachedListener)
             {
-                System.Type eventType = pair.Key;
+                int eventId = pair.Key;
                 for (int i = 0; i < pair.Value.Count; i++)
                 {
-                    UniEvent.RemoveListener(eventType, pair.Value[i]);
+                    UniEvent.RemoveListener(eventId, pair.Value[i]);
                 }
                 pair.Value.Clear();
             }
