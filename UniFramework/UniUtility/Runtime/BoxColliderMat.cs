@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace UniFramework.Utility
+namespace Uni.Utility
 {
     public class BoxColliderMat : MonoBehaviour
     {

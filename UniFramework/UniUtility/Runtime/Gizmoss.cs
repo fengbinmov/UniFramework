@@ -2,7 +2,7 @@
 using System.Linq;
 using UnityEngine;
 
-namespace UniFramework.Utility {
+namespace Uni.Utility {
 
     public class Gizmoss
     {
@@ -95,7 +95,7 @@ namespace UniFramework.Utility {
         /// <param name="angle">角度</param>
         /// <param name="segments">段数</param>
         /// <param name="rotation">方向 - 以Y轴中心开始</param>
-        public static void DrawArc(Vector3 center, float radius, float angle, Quaternion rotation, int segments = 20)
+        public static void DrawArc(Vector3 center, float radius, float angle, Quaternion rotation, int segments = 20, bool lineCenter = false)
         {
             var old = Gizmos.matrix;
 
@@ -105,6 +105,9 @@ namespace UniFramework.Utility {
             {
                 float i = ((n + 1) / (float)segments) * angle;
                 var to = new Vector3(radius * Mathf.Sin(i * Mathf.Deg2Rad), 0, radius * Mathf.Cos(i * Mathf.Deg2Rad));
+
+                if (lineCenter && n == 0) Gizmos.DrawLine(Vector3.zero, from);
+                if (lineCenter && n == segments - 1) Gizmos.DrawLine(Vector3.zero, to);
                 Gizmos.DrawLine(from, to);
                 from = to;
             }

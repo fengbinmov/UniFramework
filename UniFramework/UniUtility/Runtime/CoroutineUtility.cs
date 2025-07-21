@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace UniFramework.Utility {
+namespace Uni.Utility {
 
     /// <summary>
     /// 用于对Mono对象提供常用的时间类(无缩放时间)方法

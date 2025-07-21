@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace UniFramework.Utility
+namespace Uni.Utility
 {
     public class GizmosMeshHelper : MonoBehaviour
     {
@@ -8,6 +8,7 @@ namespace UniFramework.Utility
         public Mesh mesh;
         public bool isShow = true;
         public Color color = Color.white;
+        public Vector3 center = Vector3.zero;
         public Vector3 scale = Vector3.one;
 
         private void OnDrawGizmos()
@@ -15,7 +16,7 @@ namespace UniFramework.Utility
             if (mesh == null || !isShow) return;
 
             Gizmos.color = color;
-            Gizmos.DrawMesh(mesh, transform.position, transform.rotation, scale);
+            Gizmos.DrawMesh(mesh, transform.TransformPoint(center), transform.rotation, scale); 
         }
 #endif
     }

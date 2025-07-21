@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.IO.Compression;
 
-namespace UniFramework.Utility
+namespace Uni.Utility
 {
     public static class UniUtility
     {
@@ -914,6 +914,22 @@ namespace UniFramework.Utility
                 ret = ray.origin + ray.direction * DistanceZ; //算得射线和面的交点
                 return true;
             }
+
+            public static Vector3 Bezier(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
+            {
+                var u = 1 - t;
+                var tt = t * t;
+                var uu = u * u;
+                var uuu = uu * u;
+                var ttt = tt * t;
+
+                var p = uuu * p0;
+                p += 3 * uu * t * p1;
+                p += 3 * u * tt * p2;
+                p += ttt * p3;
+
+                return p;
+            }
         }
 
         public static class Array
@@ -1090,9 +1106,9 @@ namespace UniFramework.Utility
             /// <param name="type">类的类型</param>
             /// <param name="method">类里要调用的方法名</param>
             /// <param name="parameters">调用方法传入的参数</param>
-            public static object InvokePublicStaticMethod(System.Type type, string method, params object[] parameters)
+            public static object InvokePublicStaticMethod(System.Type type, string method,Type[] types, params object[] parameters)
             {
-                var methodInfo = type.GetMethod(method, BindingFlags.Public | BindingFlags.Static);
+                var methodInfo = type.GetMethod(method, BindingFlags.Public | BindingFlags.Static, Type.DefaultBinder, types,null);
                 if (methodInfo == null)
                 {
                     UnityEngine.Debug.LogError($"{type.FullName} not found method : {method}");
@@ -1102,14 +1118,73 @@ namespace UniFramework.Utility
             }
         }
 
-        public static class Collider
+        public static class COLLIDER
         {
             /// <summary>
             ///转换为 Cube 矩阵
             /// </summary>
             public static Matrix4x4 BoxColliderMat(BoxCollider boxCollider)
             {
-                return Matrix4x4.TRS(boxCollider.transform.TransformPoint(boxCollider.center), Quaternion.Euler(boxCollider.transform.eulerAngles), boxCollider.size);
+                var trans = boxCollider.transform;
+                return Matrix4x4.TRS(trans.TransformPoint(boxCollider.center), trans.rotation, Vector3.Scale(trans.lossyScale, boxCollider.size));
+            }
+        }
+
+        public static class PHYSICS
+        {
+            public static void IgnoreCollision(List<Collider> colliders0, List<Collider> colliders1, bool ignore = true)
+            {
+                for (int i = 0; i < colliders0.Count; i++)
+                {
+                    for (int j = 0; j < colliders1.Count; j++)
+                    {
+                        Physics.IgnoreCollision(colliders0[i], colliders1[j], ignore);
+                    }
+                }
+            }
+        }
+
+        public static class UNITS
+        {
+
+            /// <summary>
+            /// Size suffixes as text.
+            /// </summary>
+            private static readonly string[] _sizeSuffixes = { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+
+            //Attribution: https://stackoverflow.com/questions/14488796/does-net-provide-an-easy-way-convert-bytes-to-kb-mb-gb-etc
+            /// <summary>
+            /// Formats passed in bytes value to the largest possible data type with 2 decimals.
+            /// </summary>
+            public static string FormatBytesToLargest(ulong bytes)
+            {
+                int decimalPlaces = 2;
+                if (bytes == 0)
+                {
+                    decimalPlaces = 0;
+                    return string.Format("{0:n" + decimalPlaces + "} bytes", 0);
+                }
+
+                // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
+                int mag = (int)Math.Log(bytes, 1024);
+
+                // 1L << (mag * 10) == 2 ^ (10 * mag) 
+                // [i.e. the number of bytes in the unit corresponding to mag]
+                decimal adjustedSize = (decimal)bytes / (1L << (mag * 10));
+
+                // make adjustment when the value is large enough that
+                // it would round up to 1000 or more
+                if (Math.Round(adjustedSize, decimalPlaces) >= 1000)
+                {
+                    mag += 1;
+                    adjustedSize /= 1024;
+                }
+
+                //Don't show decimals for bytes.
+                if (mag == 0)
+                    decimalPlaces = 0;
+
+                return string.Format("{0:n" + decimalPlaces + "} {1}", adjustedSize, _sizeSuffixes[mag]);
             }
         }
     }
