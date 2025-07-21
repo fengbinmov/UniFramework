@@ -1,5 +1,5 @@
 ﻿
-namespace UniFramework.Reference
+namespace Uni.Reference
 {
     public interface IReference
     {

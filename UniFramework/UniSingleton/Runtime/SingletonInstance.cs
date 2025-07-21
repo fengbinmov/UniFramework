@@ -1,15 +1,17 @@
 ﻿
-namespace UniFramework.Singleton
+using System;
+
+namespace Uni.Singleton
 {
-    public abstract class SingletonInstance<T> where T : class, ISingleton
+    public abstract class SingletonInstance<T> where T : class
     {
         private static T _instance;
-        public static T Instance
+        public static T Inst
         {
             get
             {
                 if (_instance == null)
-                    UniLogger.Error($"{typeof(T)} is not create. Use {nameof(UniSingleton)}.{nameof(UniSingleton.CreateSingleton)} create.");
+                    _instance = Activator.CreateInstance<T>();
                 return _instance;
             }
         }

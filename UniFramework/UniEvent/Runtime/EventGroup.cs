@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace UniFramework.Event
+namespace Uni.Event
 {
     public class EventGroup
     {
@@ -11,15 +11,7 @@ namespace UniFramework.Event
         /// <summary>
         /// 添加一个监听
         /// </summary>
-        public void AddListener<TEvent>(System.Action<IEventMessage> listener) where TEvent : IEventMessage
-        {
-            AddListener(typeof(TEvent).GetHashCode(), listener);
-        }
-
-        /// <summary>
-        /// 添加一个监听
-        /// </summary>
-        public void AddListener(int eventId,System.Action<IEventMessage> listener)
+        public void AddListener(int eventId, System.Action<IEventMessage> listener)
         {
             if (_cachedListener.ContainsKey(eventId) == false)
                 _cachedListener.Add(eventId, new List<Action<IEventMessage>>());
@@ -33,6 +25,27 @@ namespace UniFramework.Event
             {
                 UniLogger.Warning($"Event listener is exist : {eventId}");
             }
+        }
+
+        /// <summary>
+        /// 添加一个监听
+        /// </summary>
+        public void AddListener<TEvent>(System.Action<IEventMessage> listener) where TEvent : IEventMessage
+        {
+            AddListener(typeof(TEvent).GetHashCode(), listener);
+        }
+
+        public void RemoveListener(int eventId, System.Action<IEventMessage> listener)
+        {
+            if (!_cachedListener.ContainsKey(eventId)) return;
+
+            if (_cachedListener[eventId].Contains(listener))
+            {
+                _cachedListener[eventId].Remove(listener);
+                UniEvent.RemoveListener(eventId, listener);
+            }
+
+            if (_cachedListener[eventId].Count == 0) _cachedListener.Remove(eventId);
         }
 
         /// <summary>

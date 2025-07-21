@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace UniFramework.Reference
+namespace Uni.Reference
 {
     /// <summary>
     /// 类型引用池

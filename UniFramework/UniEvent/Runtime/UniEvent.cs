@@ -2,9 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UniFramework.Reference;
+using Uni.Reference;
 
-namespace UniFramework.Event
+namespace Uni.Event
 {
     public static class UniEvent
     {
@@ -13,7 +13,7 @@ namespace UniFramework.Event
             public int PostFrame;
             public int EventID;
             public IEventMessage Message;
-            
+
             public void OnSpawn()
             {
                 PostFrame = 0;
@@ -201,7 +201,7 @@ namespace UniFramework.Event
         /// <summary>
         /// 延迟广播事件
         /// </summary>
-        public static void PostMessage(int eventId, IEventMessage message)
+        public static void PostMessage(int eventId, IEventMessage message = default)
         {
             var wrapper = UniReference.Spawn<PostWrapper>();
             wrapper.PostFrame = UnityEngine.Time.frameCount;

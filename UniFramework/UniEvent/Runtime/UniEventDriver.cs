@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace UniFramework.Event
+namespace Uni.Event
 {
     internal class UniEventDriver : MonoBehaviour
     {

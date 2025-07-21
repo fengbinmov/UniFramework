@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.IO.Compression;
 using Debug = UnityEngine.Debug;
 
-namespace UniFramework.Log
+namespace Uni.Log
 {
     public class UniLog
     {
@@ -24,6 +24,7 @@ namespace UniFramework.Log
         private bool _isManualFlush;
         private bool _isDirty;
         private int breakDiskCount = 1;                         //当前产生的日志分卷数量
+        private int runTimeCount = 1;
         private bool isEditorCreate = false;                    //是否在编辑器中也产生日志文件
 
         public bool IsManualFlush { get => _isManualFlush;set { _isManualFlush = value; } }
@@ -111,9 +112,9 @@ namespace UniFramework.Log
         private string GetDirectory()
         {
 #if UNITY_STANDALONE || UNITY_EDITOR
-            return Application.dataPath + "/../" + "Logs/UniLog";
+            return Directory.GetCurrentDirectory() + "/Logs/UniLog";
 #else
-            return Application.persistentDataPath + "/" + "Logs/UniLog";
+            return Application.persistentDataPath + "/Logs/UniLog";
 #endif
         }
 
@@ -146,25 +147,20 @@ namespace UniFramework.Log
         private void CreateOutlog()
         {
             string directory = GetDirectory();
-            string path = directory + "/" + DateTime.Now.ToString(TimeFormat2) + (breakDiskCount > 1 ? "-" + breakDiskCount.ToString() : string.Empty);
+            string rts = runTimeCount <= 1 ? string.Empty : ("("+runTimeCount+")");
+            string path = directory + "/" + DateTime.Now.ToString(TimeFormat2) + rts + (breakDiskCount > 1 ? "-" + breakDiskCount.ToString() : string.Empty);
 
             if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
-
-#if UNITY_STANDALONE || UNITY_EDITOR
-            try
-            {
-                DirectoryInfo dirInfo = new DirectoryInfo(Application.dataPath + "/../" + "Logs/GTrace");
-                dirInfo.Attributes |= FileAttributes.Hidden;
-            }
-            catch (Exception)
-            {
-            }
-#endif
 
 #if !UNITY_EDITOR
             //非编译器情况下进行日志过期删除逻辑
             DeleteOldLogFiles();
 #endif
+            while (File.Exists(path))
+            {
+                runTimeCount++;
+                path = directory + "/" + DateTime.Now.ToString(TimeFormat2)+"("+ runTimeCount + ")" + (breakDiskCount > 1 ? "-" + breakDiskCount.ToString() : string.Empty);
+            }
 
             fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             streamWriter = new StreamWriter(fileStream);

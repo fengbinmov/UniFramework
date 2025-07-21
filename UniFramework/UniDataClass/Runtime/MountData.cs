@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Cysharp.Threading.Tasks.Triggers;
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace UniFramework.Utility
+namespace Uni.Utility
 {
     public class MountData : MonoBehaviour
     {
@@ -18,6 +19,8 @@ namespace UniFramework.Utility
         [SerializeField]
         private ResGroup[] resGroups = new ResGroup[] { };
 
+        public ResGroup[] ResGroups => resGroups;
+
         /// <summary>
         /// 获取指定的值
         /// - 当 group 不为空时将会先在 ResGroup中查询值，值为空则将会在 listData 中继续查询
@@ -33,12 +36,20 @@ namespace UniFramework.Utility
                     {
                         if (!resGroups[i].name.Equals(group)) continue;
 
-                        if (!resGroups[i].data.ContainsKey(key)) Debug.LogError($"[Data,{name}] not is hav key " + key);
+                        if (!resGroups[i].data.ContainsKey(key))
+                        {
+                            Debug.LogError($"{this.gameObject.scene.name}{(group == null ?string.Empty :($"[group,{group}]"))} not is hav key [key,{key}]");
+                            return default;
+                        }
 
                         return resGroups[i].data[key];
                     }
                 }
-                if (!listData.ContainsKey(key)) Debug.LogError($"[Data,{name}] not is hav key " + key);
+                if (!listData.ContainsKey(key))
+                {
+                    Debug.LogError($"{this.gameObject.scene.name}{(group == null ? string.Empty : ($"[group,{group}]"))} not is hav key [key,{key}]");
+                    return default;
+                }
 
                 return listData[key];
             }
@@ -102,6 +113,34 @@ namespace UniFramework.Utility
                     }
                 }
                 return false;
+            }
+        }
+
+        public UnityEngine.Object GetValue(string key,string group = null)
+        {
+            if (string.IsNullOrEmpty(key)) return default;
+
+            if (string.IsNullOrEmpty(group))
+            {
+                listData.TryGetValue(key, out var obj);
+                return obj;
+            }
+            else
+            {
+                for (int i = 0; i < resGroups.Length; i++)
+                {
+                    if (!resGroups[i].name.Equals(group)) continue;
+
+                    if (resGroups[i].data.ContainsKey(key))
+                    {
+                        return resGroups[i].data[key];
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                return default;
             }
         }
 

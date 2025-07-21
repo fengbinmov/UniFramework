@@ -1,5 +1,5 @@
 ﻿
-namespace UniFramework.Event
+namespace Uni.Event
 {
     public interface IEventMessage
     {

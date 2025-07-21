@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace UniFramework.Event
+namespace Uni.Event
 {
     internal static class UniLogger
     {

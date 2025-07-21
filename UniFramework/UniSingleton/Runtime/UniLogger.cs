@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace UniFramework.Singleton
+namespace Uni.Singleton
 {
     internal static class UniLogger
     {
