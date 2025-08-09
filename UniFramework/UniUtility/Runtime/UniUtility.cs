@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Collections.Generic;
 using System.Reflection;
 using System.IO.Compression;
+using System.Linq;
 
 namespace Uni.Utility
 {
@@ -932,6 +933,167 @@ namespace Uni.Utility
             }
         }
 
+        public static class SAT
+        {
+            public struct Box3D
+            {
+                public Vector3 center;
+                public Vector3 halfSize;
+                public Quaternion rotation;
+
+                public Box3D(Vector3 center, Vector3 size, Quaternion rotation)
+                {
+                    this.center = center;
+                    this.halfSize = size * 0.5f;
+                    this.rotation = rotation;
+                }
+
+                public Vector3[] GetAxes()
+                {
+                    return new Vector3[]
+                    {
+                rotation * Vector3.right,
+                rotation * Vector3.up,
+                rotation * Vector3.forward
+                    };
+                }
+
+                public void GetAxes(Vector3[] vector3s)
+                {
+                    vector3s[0] = rotation * Vector3.right;
+                    vector3s[1] = rotation * Vector3.up;
+                    vector3s[2] = rotation * Vector3.forward;
+                }
+
+                public Vector3[] GetVertices()
+                {
+                    Vector3[] axes = GetAxes();
+                    Vector3[] vertices = new Vector3[8];
+                    int i = 0;
+                    for (int dx = -1; dx <= 1; dx += 2)
+                        for (int dy = -1; dy <= 1; dy += 2)
+                            for (int dz = -1; dz <= 1; dz += 2)
+                            {
+                                vertices[i++] = center +
+                                                axes[0] * dx * halfSize.x +
+                                                axes[1] * dy * halfSize.y +
+                                                axes[2] * dz * halfSize.z;
+                            }
+                    return vertices;
+                }
+
+                public static Box3D From(BoxCollider collider)
+                {
+                    Vector3 center = collider.transform.TransformPoint(collider.center);
+                    Vector3 size = Vector3.Scale(collider.transform.lossyScale, collider.size);
+                    Quaternion rotation = collider.transform.rotation;
+                    return new Box3D(center, size, rotation);
+                }
+
+                public static Box3D From(Bounds localBounds, Transform transform)
+                {
+                    Vector3 center = transform.TransformPoint(localBounds.center);
+                    Vector3 size = Vector3.Scale(transform.lossyScale, localBounds.size);
+                    Quaternion rotation = transform.rotation;
+                    return new Box3D(center, size, rotation);
+                }
+
+                public static Box3D From(Bounds localBounds, Vector3 p,Quaternion r,Vector3 scale)
+                {
+                    Matrix4x4 mat = Matrix4x4.TRS(p, r, Vector3.one);
+
+                    Vector3 center = mat.MultiplyPoint(localBounds.center);
+                    Vector3 size = Vector3.Scale(scale, localBounds.size);
+                    return new Box3D(center, size, r);
+                }
+            }
+
+            const float EPSILON = 1e-6f;
+
+            private static Vector3[] A = new Vector3[3];
+            private static Vector3[] B = new Vector3[3];
+
+            private static float[,] R = new float[3, 3];
+            private static float[,] AbsR = new float[3, 3];
+
+            public static bool CheckBoxCollision(Bounds lb1, Transform tran1, Bounds lb2, Transform tran2)
+            {
+                return CheckBoxCollision(Box3D.From(lb1, tran1), Box3D.From(lb2, tran2));
+            }
+
+            public static bool CheckBoxCollision(BoxCollider box1, BoxCollider box2)
+            {
+                return CheckBoxCollision(Box3D.From(box1), Box3D.From(box2));
+            }
+
+            /// <summary>
+            /// SAT 判断两个 Box3D 是否发生碰撞
+            /// </summary>
+            public static bool CheckBoxCollision(Box3D boxA, Box3D boxB)
+            {
+                boxA.GetAxes(A); // A 的坐标轴
+                boxB.GetAxes(B); // B 的坐标轴
+                Vector3 T = boxB.center - boxA.center;
+
+                // 将 T 表示在 A 的局部空间中
+                T = new Vector3(Vector3.Dot(T, A[0]), Vector3.Dot(T, A[1]), Vector3.Dot(T, A[2]));
+
+                // 计算 B 的坐标轴在 A 坐标轴下的投影矩阵（旋转部分）
+                for (int i = 0; i < 3; i++)
+                    for (int j = 0; j < 3; j++)
+                    {
+                        R[i, j] = Vector3.Dot(A[i], B[j]);
+                        AbsR[i, j] = Mathf.Abs(R[i, j]) + EPSILON;
+                    }
+
+                // 进行 15 个轴的测试（3A轴，3B轴，9个叉乘轴）
+
+                // 1. A的轴
+                for (int i = 0; i < 3; i++)
+                {
+                    float ra = boxA.halfSize[i];
+                    float rb = boxB.halfSize.x * AbsR[i, 0] +
+                               boxB.halfSize.y * AbsR[i, 1] +
+                               boxB.halfSize.z * AbsR[i, 2];
+                    if (Mathf.Abs(T[i]) > ra + rb)
+                        return false;
+                }
+
+                // 2. B的轴
+                for (int i = 0; i < 3; i++)
+                {
+                    float ra = boxA.halfSize.x * AbsR[0, i] +
+                               boxA.halfSize.y * AbsR[1, i] +
+                               boxA.halfSize.z * AbsR[2, i];
+                    float rb = boxB.halfSize[i];
+                    float t = Mathf.Abs(T[0] * R[0, i] + T[1] * R[1, i] + T[2] * R[2, i]);
+                    if (t > ra + rb)
+                        return false;
+                }
+
+                // 3. 交叉轴 A[i] x B[j]
+                for (int i = 0; i < 3; i++)
+                    for (int j = 0; j < 3; j++)
+                    {
+                        float ra = boxA.halfSize[(i + 1) % 3] * AbsR[(i + 2) % 3, j] +
+                                   boxA.halfSize[(i + 2) % 3] * AbsR[(i + 1) % 3, j];
+                        float rb = boxB.halfSize[(j + 1) % 3] * AbsR[i, (j + 2) % 3] +
+                                   boxB.halfSize[(j + 2) % 3] * AbsR[i, (j + 1) % 3];
+
+                        float t = Mathf.Abs(
+                            T[(i + 2) % 3] * R[(i + 1) % 3, j] -
+                            T[(i + 1) % 3] * R[(i + 2) % 3, j]
+                        );
+
+                        if (t > ra + rb)
+                            return false;
+                    }
+
+                // 所有轴都重叠，表示发生碰撞
+                return true;
+            }
+        }
+
         public static class Array
         {
             /// <summary>
@@ -939,7 +1101,6 @@ namespace Uni.Utility
             /// </summary>
             public static string ToString<T>(IEnumerable<T> collection)
             {
-
                 string ms = "( ";
                 foreach (var item in collection)
                 {
@@ -947,6 +1108,42 @@ namespace Uni.Utility
                 }
 
                 return ms + ")";
+            }
+
+            public static void Random<T>(T[] collection)
+            {
+                for (int i = 0; i < collection.Length; i++)
+                {
+                    int j = UnityEngine.Random.Range(0, collection.Length);
+                    var temp = collection[j];
+
+                    collection[j] = collection[i];
+                    collection[i] = temp;
+                }
+            }
+
+            public static void Random<T>(T[] collection,System.Random random)
+            {
+                for (int i = 0; i < collection.Length; i++)
+                {
+                    int j = random.Next(0, collection.Length);
+                    var temp = collection[j];
+
+                    collection[j] = collection[i];
+                    collection[i] = temp;
+                }
+            }
+
+            public static void Random<T>(List<T> collection)
+            {
+                for (int i = 0; i < collection.Count; i++)
+                {
+                    int j = UnityEngine.Random.Range(0, collection.Count);
+                    var temp = collection[j];
+
+                    collection[j] = collection[i];
+                    collection[i] = temp;
+                }
             }
         }
 
@@ -1075,12 +1272,17 @@ namespace Uni.Utility
                 }
             }
 
+            public static void SetStaticValue<T>(string parameterName, object parameters)
+            {
+                typeof(T).GetField(parameterName, BindingFlags.NonPublic | BindingFlags.Static).SetValue(null, parameters);
+            }
+
             /// <summary>
             /// 获取私有字段与属性
             /// </summary>
             public static object GetValue<T>(object obj, string parameterName)
             {
-                return typeof(T).GetField(parameterName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(obj);
+                return typeof(T).GetField(parameterName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(obj);
             }
 
             /// <summary>
@@ -1128,11 +1330,16 @@ namespace Uni.Utility
                 var trans = boxCollider.transform;
                 return Matrix4x4.TRS(trans.TransformPoint(boxCollider.center), trans.rotation, Vector3.Scale(trans.lossyScale, boxCollider.size));
             }
+
+            public static Matrix4x4 BoundColliderMat(Bounds lbounds,Transform trans)
+            {
+                return Matrix4x4.TRS(trans.TransformPoint(lbounds.center), trans.rotation, Vector3.Scale(trans.lossyScale, lbounds.size));
+            }
         }
 
         public static class PHYSICS
         {
-            public static void IgnoreCollision(List<Collider> colliders0, List<Collider> colliders1, bool ignore = true)
+            public static void IgnoreCollision(IList<Collider> colliders0, IList<Collider> colliders1, bool ignore = true)
             {
                 for (int i = 0; i < colliders0.Count; i++)
                 {
@@ -1185,6 +1392,35 @@ namespace Uni.Utility
                     decimalPlaces = 0;
 
                 return string.Format("{0:n" + decimalPlaces + "} {1}", adjustedSize, _sizeSuffixes[mag]);
+            }
+
+            public static string Number(int number,char cha = ',')
+            {
+                if (number == 0) return "0";
+
+                var s = Mathf.Abs(number).ToString().ToList();
+                
+                int c = 0;
+                for (int i = s.Count - 1; i >= 0; i--)
+                {
+                    c++;
+                    if (i != 0)
+                    {
+                        if (c == 3)
+                        {
+                            c = 0;
+                            s.Insert(i, cha);
+                        }
+                    }
+                }
+
+                string ms = number >= 0 ? string.Empty : "-";
+
+                foreach (var item in s)
+                {
+                    ms += item;
+                }
+                return ms;
             }
         }
     }

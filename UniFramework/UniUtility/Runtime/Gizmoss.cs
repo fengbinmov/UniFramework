@@ -179,6 +179,10 @@ namespace Uni.Utility {
             Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
             Gizmos.matrix = old;
         }
+        public static void DrawCube(BoxCollider box)
+        {
+            DrawCube(box.transform.TransformPoint(box.center), Vector3.Scale(box.transform.lossyScale, box.size), box.transform.rotation);
+        }
 
         /// <summary>
         /// 绘制一个线框立方体
@@ -205,6 +209,19 @@ namespace Uni.Utility {
             if (loop && arr.Length > 1)
             {
                 Gizmos.DrawLine(arr[0], arr[arr.Length - 1]);
+            }
+        }
+        public static void DrawArrowPath(IEnumerable<Vector3> path, bool loop = false)
+        {
+            var arr = path.ToArray();
+
+            for (int i = 0; i < arr.Length - 1; i++)
+            {
+                Gizmoss.DrawArrow(arr[i], arr[i + 1]);
+            }
+            if (loop && arr.Length > 1)
+            {
+                Gizmoss.DrawArrow(arr[0], arr[arr.Length - 1]);
             }
         }
 

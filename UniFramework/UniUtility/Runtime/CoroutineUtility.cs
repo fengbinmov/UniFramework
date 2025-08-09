@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using UnityEngine.Scripting;
 using UnityEngine;
 
 namespace Uni.Utility {
@@ -13,6 +14,7 @@ namespace Uni.Utility {
         /// 延迟调用
         /// </summary>
         /// <param name="duetime">延迟秒</param>
+        [Preserve]
         public static Coroutine TimeDelay(this MonoBehaviour mono, float duetime, Action action)
         {
             if (!mono.gameObject.activeInHierarchy) return null;
@@ -27,6 +29,7 @@ namespace Uni.Utility {
         /// <param name="actionStar">开始Action</param>
         /// <param name="action">每Time帧Action;传入 [0,time]</param>
         /// <param name="actionEnd">Time 结束Action</param>
+        [Preserve]
         public static Coroutine TimeProcess(this MonoBehaviour mono, float time, Action actionStar, Action<float> action, Action actionEnd = null)
         {
             if (!mono.gameObject.activeInHierarchy) return null;
@@ -40,6 +43,7 @@ namespace Uni.Utility {
         /// <param name="actionStar">开始Action</param>
         /// <param name="action">每Time帧Action;传入 [0,1]</param>
         /// <param name="actionEnd">Time 结束Action</param>
+        [Preserve]
         public static Coroutine TimeProcessOne(this MonoBehaviour mono, float time, Action actionStar, Action<float> action, Action actionEnd = null)
         {
             if (!mono.gameObject.activeInHierarchy) return null;
@@ -55,6 +59,7 @@ namespace Uni.Utility {
         /// <param name="action">每次周期的开始 Action;传入 周期次数</param>
         /// <param name="actionEnd">结束 Action</param>
         /// <returns></returns>
+        [Preserve]
         public static Coroutine TimeStep(this MonoBehaviour mono, float setpTime, int count, Action actionStar, Action<int> action, Action actionEnd = null)
         {
             if (!mono.gameObject.activeInHierarchy) return null;
@@ -69,6 +74,7 @@ namespace Uni.Utility {
         /// <param name="wait">终止后的等待时间</param>
         /// <param name="end">结束 Action</param>
         /// <returns></returns>
+        [Preserve]
         public static Coroutine TimeUpdate(this MonoBehaviour mono, YieldInstruction yield_, Func<bool> action, float wait = 0, Action end = null)
         {
             if (!mono.gameObject.activeInHierarchy) return null;
@@ -102,7 +108,7 @@ namespace Uni.Utility {
                     for (int i = n; i <= n_; i++)
                     {
                         action.Invoke(n);
-                        if (n >= step)
+                        if (n >= step && step >= 0)
                         {
                             isBreak = true;
                             break;

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public static class ExtensionMethod
 {
@@ -17,5 +18,12 @@ public static class ExtensionMethod
         else {
             return gameObject.AddComponent<T>();
         }
+    }
+
+    public static void ToSameScene(this GameObject gameObject,GameObject target)
+    {
+        if (gameObject.scene.handle == target.scene.handle) return;
+
+        SceneManager.MoveGameObjectToScene(gameObject, target.scene);
     }
 }
