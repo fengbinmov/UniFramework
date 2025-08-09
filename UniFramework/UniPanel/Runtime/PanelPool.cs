@@ -1,55 +1,51 @@
 using UnityEngine;
-using UnityEngine.UI;
 using System.Collections.Generic;
+using System.Text;
 
-namespace UniFramework.Uipanel
+namespace Uni.UniPanel
 {
-    [RequireComponent(typeof(Canvas))]
+    [RequireComponent(typeof(RectTransform))]
     public class PanelPool : MonoBehaviour
     {
-        private Canvas _canvas;
-        private GraphicRaycaster _raycaster;
-
         private Transform contentShow;
         private Transform contentClose;
 
         protected List<PanelBase> loadedUI = new List<PanelBase>();     //页面容器 -- 存放所有实例化的页面
-        protected List<int> listOpenUI = new List<int>();               //记录已经现实的页面ID
+        protected List<int> listOpenUI = new List<int>();               //记录已经显示的页面ID
 
-        public static PanelPool Initalize(GameObject desktop) {
-
-            if (desktop.TryGetComponent<PanelPool>(out var mgr)) {
-                mgr.OnInit();
-                return mgr;
-            }
-            return null;
-        }
+        [Tooltip("保持显示层级与Canvas一样大")]
+        public bool IsRectFull = true;
 
         /// <summary>
         /// 初始化界面系统
         /// </summary>
         public virtual void OnInit()
         {
-            _canvas = GetComponent<Canvas>();
-            _raycaster = GetComponent<GraphicRaycaster>();
-
             if (contentClose == null) contentClose = transform.Find("- Close Layer");
             if (contentShow == null) contentShow = transform.Find("- Show Layer");
 
             if (contentClose == null) 
             {
-                GameObject obj = new GameObject("- Close Layer");
-                obj.transform.SetParent(transform);
-                RectFull(obj.AddComponent<RectTransform>());
+                GameObject obj = new GameObject("- Close Layer",typeof(RectTransform));
                 contentClose = obj.transform;
+                contentClose.SetParent(transform);
             }
+            contentClose.gameObject.hideFlags = HideFlags.HideInHierarchy;
+            contentClose.gameObject.transform.localScale = Vector3.one;
+            contentClose.gameObject.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            if (IsRectFull) RectFull((RectTransform)contentClose);
+
             if (contentShow == null)
             {
-                GameObject obj = new GameObject("- Show Layer");
-                obj.transform.SetParent(transform);
-                RectFull(obj.AddComponent<RectTransform>());
+                GameObject obj = new GameObject("- Show Layer", typeof(RectTransform));
                 contentShow = obj.transform;
+                contentShow.SetParent(transform);
             }
+            contentShow.gameObject.transform.localScale = Vector3.one;
+            contentShow.gameObject.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            if (IsRectFull) RectFull((RectTransform)contentShow);
+
+            DestroyAll();
 
             loadedUI.Clear();
             listOpenUI.Clear();
@@ -58,12 +54,23 @@ namespace UniFramework.Uipanel
         /// <summary>
         /// 打开页面
         /// </summary>
+        /// <param name="panelName">页面名称</param>
+        /// <param name="param">传入参数</param>
+        /// <returns>页面</returns>
+        public PanelBase ShowPanel(string panelName, System.Object param = null,bool coercion = false)
+        {
+            return ShowPanel(GetPanel(panelName), param, coercion);
+        }
+
+        /// <summary>
+        /// 打开页面
+        /// </summary>
         /// <typeparam name="T">页面类型</typeparam>
         /// <param name="param">传入参数</param>
         /// <returns>页面</returns>
-        public T ShowPanel<T>(System.Object param = null) where T : PanelBase
+        public T ShowPanel<T>(System.Object param = null, bool coercion = false) where T : PanelBase
         {
-            return ShowPanel<T>(nameof(T),param);
+            return (T)ShowPanel(GetPanel<T>(), param, coercion);
         }
 
         /// <summary>
@@ -73,22 +80,9 @@ namespace UniFramework.Uipanel
         /// <param name="panelName">页面名称</param>
         /// <param name="param">传入参数</param>
         /// <returns>页面</returns>
-        public T ShowPanel<T>(string panelName, System.Object param = null) where T : PanelBase {
-
-            PanelBase panel = ShowPanel(panelName, param);
-            return panel == null ? null : (T)panel;
-        }
-
-        /// <summary>
-        /// 打开页面
-        /// </summary>
-        /// <param name="panelName">页面名称</param>
-        /// <param name="param">传入参数</param>
-        /// <returns>页面</returns>
-        public PanelBase ShowPanel(string panelName, System.Object param = null)
+        public T ShowPanel<T>(string panelName, System.Object param = null, bool coercion = false) where T : PanelBase
         {
-            PanelBase panel = GetPanel(panelName);
-            return ShowPanel(panel); ;
+            return (T)ShowPanel(GetPanel<T>(panelName), param, coercion);
         }
 
         /// <summary>
@@ -96,12 +90,23 @@ namespace UniFramework.Uipanel
         /// </summary>
         /// <param name="panel">页面</param>
         /// <param name="param">传入参数</param>
+        /// <param name="coercion">覆写</param>
         /// <returns>页面</returns>
-        public virtual PanelBase ShowPanel(PanelBase panel, System.Object param = null)
+        public virtual PanelBase ShowPanel(PanelBase panel, System.Object param = null, bool coercion = false)
         {
             if (panel == null) return null;
 
-            if (listOpenUI.Contains(panel.ID)) return panel;
+            if (listOpenUI.Contains(panel.ID))
+            {
+                if (coercion)
+                {
+                    panel.transform.SetParent(contentShow);
+                    panel.transform.SetAsLastSibling();
+
+                    panel.ShowPanel(param);
+                }
+                return panel;
+            }
 
             panel.transform.SetParent(contentShow);
             panel.transform.SetAsLastSibling();
@@ -115,20 +120,28 @@ namespace UniFramework.Uipanel
         /// <summary>
         /// 关闭页面
         /// </summary>
-        /// <typeparam name="T">页面类型</typeparam>
-        public void ClosePanel<T>()
+        /// <param name="panelName">页面名称</param>
+        public void ClosePanel(string panelName)
         {
-            ClosePanel(nameof(T));
+            ClosePanel(GetPanel(panelName));
+        }
+
+        /// <summary>
+        /// 关闭页面
+        /// </summary>
+        /// <typeparam name="T">页面类型</typeparam>
+        public void ClosePanel<T>() where T : PanelBase
+        {
+            ClosePanel(GetPanel<T>());
         }
 
         /// <summary>
         /// 关闭页面
         /// </summary>
         /// <param name="panelName">页面名称</param>
-        public void ClosePanel(string panelName)
+        public void ClosePanel<T>(string panelName) where T : PanelBase
         {
-            PanelBase panel = GetPanel(panelName);
-            ClosePanel(panel);
+            ClosePanel(GetPanel<T>(panelName));
         }
 
         /// <summary>
@@ -147,6 +160,14 @@ namespace UniFramework.Uipanel
             listOpenUI.Remove(panel.ID);
         }
 
+        public void CloseAllPanel()
+        {
+            for (int i = loadedUI.Count - 1; i >= 0; i--)
+            {
+                ClosePanel(loadedUI[i]);
+            }
+        }
+
         /// <summary>
         /// 销毁所有页面
         /// </summary>
@@ -156,6 +177,15 @@ namespace UniFramework.Uipanel
             {
                 DestroyPanel(loadedUI[i]);
             }
+        }
+
+        /// <summary>
+        /// 销毁页面
+        /// </summary>
+        /// <param name="panel">页面</param>
+        public void DestroyPanel(string panelName)
+        {
+            DestroyPanel(GetPanel(panelName));
         }
 
         /// <summary>
@@ -178,16 +208,56 @@ namespace UniFramework.Uipanel
         }
 
         /// <summary>
-        /// 获取页面
+        /// 获取页面 (模糊定位)
         /// </summary>
         /// <param name="name">页面名称</param>
         /// <returns>页面</returns>
         public PanelBase GetPanel(string name) {
 
-            for (int i = 0; loadedUI.Count > i; i++) 
+            for (int i = loadedUI.Count - 1; i >= 0; i--)
             {
+                if (loadedUI[i] == null)
+                {
+                    Debug.LogWarning($"GetPanel find a null panel! {i}");
+                    loadedUI.RemoveAt(i);
+                    continue;
+                }
                 if (loadedUI[i].name.Equals(name))
                     return loadedUI[i];
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 获取页面  (模糊定位)
+        /// </summary>
+        /// <returns>页面</returns>
+        public T GetPanel<T>() where T : PanelBase
+        {
+            var ttype = typeof(T);
+            for (int i = 0; loadedUI.Count > i; i++)
+            {
+                if (loadedUI[i].GetType().Equals(ttype))
+                    return (T)loadedUI[i];
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 获取页面
+        /// </summary>
+        /// <returns>页面</returns>
+        public T GetPanel<T>(string name) where T : PanelBase
+        {
+            var ttype = typeof(T);
+            for (int i = 0; loadedUI.Count > i; i++)
+            {
+                var panel = loadedUI[i];
+                if (panel.name.Equals(name) && panel.GetType().Equals(ttype))
+                {
+                    return (T)panel;
+                }
             }
             return null;
         }
@@ -201,8 +271,7 @@ namespace UniFramework.Uipanel
         {
             for (int i = 0; i < loadedUI.Count; i++)
             {
-                PanelBase panel = loadedUI[i];
-                if (panel.name == name)
+                if (loadedUI[i].name == name)
                     return true;
             }
             return false;
@@ -238,7 +307,7 @@ namespace UniFramework.Uipanel
 
             if (IsContains(panelName))
             {
-                Debug.LogError($"有相同名称的页面加入 {panelName}！");
+                Debug.LogWarning($"有相同名称的页面加入 {panelName}！");
                 return null;
             }
             else
@@ -248,17 +317,13 @@ namespace UniFramework.Uipanel
                 PanelBase panel = obj.GetComponent<PanelBase>();
 
                 loadedUI.Add(panel);
+                Debug.Log($"PanelPool AddPanel [prefab,{prefab.name}] [name,{panelName}] [index,{loadedUI.Count-1}]");
 
-                panel.transform.localPosition = Vector3.zero;
-                RectTransform rect = (RectTransform)panel.transform;
-                rect.anchoredPosition = Vector2.zero;
-                rect.anchorMax = Vector2.zero;
-                rect.anchorMin = Vector2.zero;
-                rect.anchorMax = Vector2.one;
-
-                panel.Initalize(this);
+                panel.RectFull();
 
                 panel.gameObject.SetActive(false);
+
+                panel.Initalize(this);
 
                 return (T)panel;
             }
@@ -267,10 +332,37 @@ namespace UniFramework.Uipanel
         public static void RectFull(RectTransform rect) {
 
             rect.anchoredPosition = Vector2.zero;
-            rect.anchorMax = Vector2.zero;
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.sizeDelta = Vector2.zero;
+        }
+
+        [ContextMenu("ToString")]
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine($"loadedUI [count,{loadedUI.Count}]");
+
+            for (var i = 0; i < loadedUI.Count; i++)
+            {
+                if (loadedUI[i] == null)
+                {
+                    sb.AppendLine($"{i.ToString("00")} [{loadedUI[i].IsActive}] [id,{loadedUI[i].ID}] [name,{loadedUI[i].name}]");
+                }
+                else
+                {
+                    sb.AppendLine($"{i.ToString("00")} is null");
+                }
+            }
+
+            sb.AppendLine($"listOpenUI [count,{loadedUI.Count}]");
+
+            for (var i = 0; i < listOpenUI.Count; i++)
+            {
+                sb.AppendLine($"{i.ToString("00")} [id,{listOpenUI[i]}]");
+            }
+            return sb.ToString();
         }
     }
 }

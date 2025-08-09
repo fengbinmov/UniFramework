@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 
-namespace UniFramework.Uipanel {
-
+namespace Uni.UniPanel
+{
+    [RequireComponent(typeof(RectTransform))]
     public abstract class PanelBase : MonoBehaviour
     {
         private PanelPool _PanelPool;
@@ -11,6 +12,7 @@ namespace UniFramework.Uipanel {
 
         public int ID => GetInstanceID();
         public bool IsActive => gameObject.activeInHierarchy;
+        public bool isAutoRectFull = true;
 
         #region internal
         internal void Initalize(PanelPool PanelPool_) {
@@ -19,11 +21,14 @@ namespace UniFramework.Uipanel {
             if (!_isInitialize)
             {
                 _isInitialize = true;
+                Debug.Log($"Panel OnInit {name}");
                 OnInit();
             }
         }
 
         internal void ShowPanel(System.Object param = null) {
+
+            Debug.Log($"Panel ShowPanel {name}");
 
             gameObject.SetActive(true);
 
@@ -32,7 +37,9 @@ namespace UniFramework.Uipanel {
 
         internal void ClosePanel() {
 
-            OnClear();
+            Debug.Log($"Panel ClosePanel {name}");
+
+            StopAllCoroutines();
 
             gameObject.SetActive(false);
 
@@ -67,22 +74,30 @@ namespace UniFramework.Uipanel {
         {
         }
 
+        /// <summary>
+        /// 显示界面
+        /// </summary>
+        /// <param name="param"></param>
         protected virtual void OnShow(System.Object param = null)
         {
         }
 
         /// <summary>
-        /// 关闭界面
+        /// 关闭界面/隐藏
         /// </summary>
         protected virtual void OnClose()
         {
         }
 
-        /// <summary>
-        /// 清理界面
-        /// </summary>
-        protected virtual void OnClear()
+        public void RectFull()
         {
+            if (!isAutoRectFull) return;
+
+            var rect = (RectTransform)transform;
+            rect.anchoredPosition = Vector2.zero;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.sizeDelta = Vector2.zero;
         }
     }
 }
