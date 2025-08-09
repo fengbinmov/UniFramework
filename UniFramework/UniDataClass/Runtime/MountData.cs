@@ -116,6 +116,21 @@ namespace Uni.Utility
             }
         }
 
+        public bool TryGetResGroup(string group,out ResGroup resGroup)
+        {
+            resGroup = default;
+            for (int i = 0; i < resGroups.Length; i++)
+            {
+                if (resGroups[i].name.Equals(group))
+                {
+                    resGroup = resGroups[i];
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public UnityEngine.Object GetValue(string key,string group = null)
         {
             if (string.IsNullOrEmpty(key)) return default;
