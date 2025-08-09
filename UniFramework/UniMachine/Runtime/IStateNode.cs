@@ -1,5 +1,5 @@
 ﻿
-namespace UniFramework.Machine
+namespace Uni.Machine
 {
     public interface IStateNode
     {

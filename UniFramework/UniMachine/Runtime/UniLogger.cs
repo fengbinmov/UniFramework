@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace UniFramework.Machine
+namespace Uni.Machine
 {
     internal static class UniLogger
     {

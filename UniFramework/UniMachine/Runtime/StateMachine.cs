@@ -2,12 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace UniFramework.Machine
+namespace Uni.Machine
 {
     public class StateMachine
     {
         private readonly Dictionary<string, System.Object> _blackboard = new Dictionary<string, object>(100);
         private readonly Dictionary<string, IStateNode> _nodes = new Dictionary<string, IStateNode>(100);
+
         private IStateNode _curNode;
         private IStateNode _preNode;
 
@@ -31,7 +32,6 @@ namespace UniFramework.Machine
         {
             get { return _preNode != null ? _preNode.GetType().FullName : string.Empty; }
         }
-
 
         private StateMachine() { }
         public StateMachine(System.Object owner)
