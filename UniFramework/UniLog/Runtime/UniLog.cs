@@ -30,6 +30,12 @@ namespace Uni.Log
         public bool IsManualFlush { get => _isManualFlush;set { _isManualFlush = value; } }
         public GameObject driver;
 
+        public int ErrorCount { get; private set; } = 0; //错误日志计数
+        public int WarningCount { get; private set; } = 0; //警告日志计数
+        public int ExceptionCount { get; private set; } = 0; //异常日志计数
+
+        public string CurrentLogFilePath { get; private set; }
+
         #region instance
         private static bool _isInitialize = false;
         private static readonly object obj = new object();
@@ -162,6 +168,8 @@ namespace Uni.Log
                 path = directory + "/" + DateTime.Now.ToString(TimeFormat2)+"("+ runTimeCount + ")" + (breakDiskCount > 1 ? "-" + breakDiskCount.ToString() : string.Empty);
             }
 
+            CurrentLogFilePath = path;
+
             fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             streamWriter = new StreamWriter(fileStream);
             sbuilder = new StringBuilder();
@@ -262,6 +270,21 @@ namespace Uni.Log
         /// </summary>
         private void Application_logMessageReceivedThreaded(string logString, string stackTrace, LogType type)
         {
+            switch (type)
+            {
+                case LogType.Error:
+                    ErrorCount++;
+                    break;
+                case LogType.Warning:
+                    WarningCount++;
+                    break;
+                case LogType.Exception:
+                    ExceptionCount++;
+                    break;
+                default:
+                    break;
+            }
+
             sbuilder.Clear();
             sbuilder.Append($"[{type.ToString().Substring(0, 3)}]   [{DateTime.Now.ToString(TimeFormat)}]  {logString}");
 

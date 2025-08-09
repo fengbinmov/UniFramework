@@ -7,14 +7,15 @@ namespace Uni.Log {
     /// </summary>
     public class UniLogDriver : MonoBehaviour
     {
-#if INTERNAL_CLIENT || UNITY_EDITOR
+#if INTERNAL_CLIENT || UNITY_EDITOR || UNITY_SERVER
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
 #endif
         public static void Initalize() {
 
             UniLog.Initalize();
         }
-#if INTERNAL_CLIENT || UNITY_EDITOR
+
+#if INTERNAL_CLIENT || UNITY_EDITOR || UNITY_SERVER
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 #endif
         static void ManualFlush()
