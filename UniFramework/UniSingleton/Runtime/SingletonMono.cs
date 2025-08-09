@@ -23,6 +23,8 @@ namespace Uni.Singleton {
 
             if (IsDontDestroyOnLoad)
             {
+                if(transform.parent) transform.parent = null;
+
                 DontDestroyOnLoad(gameObject);
             }
         }

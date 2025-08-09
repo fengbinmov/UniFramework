@@ -47,6 +47,7 @@ namespace Uni.Singleton
         private static bool _isDirty = false;
 
         public static bool IsInitialize => _isInitialize;
+        public static MonoBehaviour Behaviour => _behaviour;
 
         /// <summary>
         /// 初始化单例系统
